@@ -3,7 +3,7 @@ This is our main driver file. It is responsible for handling user input and disp
 '''
 
 import pygame as p
-from chess import chess_engine
+import chess_engine
 
 p.init()
 WIDTH = HEIGHT = 512 #400 is another option
@@ -32,14 +32,43 @@ def main():
     screen = p.display.set_mode((WIDTH,HEIGHT))
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
-
     gs = chess_engine.game_state()
+
+    valid_moves = gs.get_valid_moves()
+    move_made = False # flag variable for when a move is made
+
     load_images() # only once, before the loop
     running = True
+    sq_selected = () #no square is selected, keep track of the last click of the user (tuple: (row, col))
+    player_clicks = []   #keep track of the player clicks (two tuples: [(6,4), (4, 4)])
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos() #(x,y) location of mouse
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sq_selected == (row, col): #the user clicked the same square twice
+                    sq_selected = () #deselect
+                    player_clicks = []  #clear player clicks
+                else:
+                    sq_selected = (row, col)
+                    player_clicks.append(sq_selected) #append for boths 1st and 2nd clicks
+                if len(player_clicks) == 2:  #after the 2nd click
+                        move = chess_engine.Move(player_clicks[0], player_clicks[1], gs.board)
+                        print(move.get_chess_notation())
+                        if move in valid_moves:
+                            gs.make_move(move)
+                        sq_selected = () #reset the user clicks
+                        player_clicks = []
+            elif e.type == p.KEYDOWN:
+                if e.key == p.K_z: # we undo a move if 'z' is pressed
+                    gs.undo()
+                    move_made = True
+        if move_made:
+            valid_moves = gs.get_valid_moves()
+            move_made = False
 
 
         draw_game_state(screen, gs)
