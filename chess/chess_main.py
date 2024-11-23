@@ -49,6 +49,7 @@ def main():
                 location = p.mouse.get_pos() #(x,y) location of mouse
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
+                print(f"Mouse clicked at {row}, {col}")
                 if sq_selected == (row, col): #the user clicked the same square twice
                     sq_selected = () #deselect
                     player_clicks = []  #clear player clicks
@@ -57,18 +58,27 @@ def main():
                     player_clicks.append(sq_selected) #append for boths 1st and 2nd clicks
                 if len(player_clicks) == 2:  #after the 2nd click
                         move = chess_engine.Move(player_clicks[0], player_clicks[1], gs.board)
-                        print(move.get_chess_notation())
+                        print(f"Trying to make move: {move.get_chess_notation()}")
                         if move in valid_moves:
                             gs.make_move(move)
-                        sq_selected = () #reset the user clicks
-                        player_clicks = []
+                            print(f"Move made: {move.get_chess_notation()}")
+                            move_made = True
+                            sq_selected = ()  # reset the user clicks
+                            player_clicks = []
+                        else:
+                            print(f"Invalid move: {move.get_chess_notation()}")
+                            player_clicks = [sq_selected]
+
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z: # we undo a move if 'z' is pressed
                     gs.undo()
                     move_made = True
-        if move_made:
-            valid_moves = gs.get_valid_moves()
-            move_made = False
+                    print("Move undone.")
+            if move_made:
+                print("Updating valid moves...")  # Debug log
+                valid_moves = gs.get_valid_moves()
+                move_made = False
+                print(move_made)
 
 
         draw_game_state(screen, gs)
